@@ -1,13 +1,39 @@
+using AdventureGraphQL.Api.Auth;
 using AdventureGraphQL.Api.Data;
 using AdventureGraphQL.Api.Data.Entities;
 using HotChocolate;
+using HotChocolate.Authorization;
 using HotChocolate.Subscriptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace AdventureGraphQL.Api.GraphQL;
 
 public class Mutation
 {
+    /// <summary>
+    /// Inicia sesión. Valida usuario/contraseña contra el usuario demo de la
+    /// configuración y, si son correctos, devuelve un JWT firmado para "ingresar".
+    /// </summary>
+    public AuthPayload Login(
+        LoginInput input,
+        IConfiguration config,
+        [Service] TokenService tokens)
+    {
+        var demo = config.GetSection("DemoUser");
+
+        var credencialesOk =
+            input.Username == demo["Username"] &&
+            input.Password == demo["Password"];
+
+        if (!credencialesOk)
+            throw new GraphQLException("Usuario o contraseña incorrectos.");
+
+        var (token, expiresAt) = tokens.Create(input.Username);
+        return new AuthPayload(token, expiresAt, input.Username);
+    }
+
     /// <summary>Crea un producto y notifica a los suscriptores.</summary>
+    [Authorize(Roles = ["Gestor"])]   // Escenario D: solo el rol Gestor
     public async Task<ProductPayload> AddProductAsync(
         AddProductInput input,
         AdventureWorksContext context,
@@ -49,6 +75,7 @@ public class Mutation
     }
 
     /// <summary>Actualiza el precio con patrón de error tipado.</summary>
+    [Authorize(Roles = ["Gestor"])]   // Escenario D: solo el rol Gestor
     [Error(typeof(ProductNotFoundException))]
     public async Task<Product> UpdatePriceAsync(
         int id,
@@ -72,5 +99,35 @@ public class Mutation
             new ProductPayload(product.ProductID, product.Name, product.ListPrice), ct);
 
         return product;
+    }
+
+    /// <summary>Elimina un producto. Usa error tipado para "no encontrado".</summary>
+    [Authorize(Roles = ["Gestor"])]   // Escenario D: solo el rol Gestor
+    [Error(typeof(ProductNotFoundException))]
+    public async Task<DeleteProductPayload> DeleteProductAsync(
+        int id,
+        AdventureWorksContext context,
+        CancellationToken ct)
+    {
+        var product = await context.Products.FindAsync([id], ct)
+            ?? throw new ProductNotFoundException(id);
+
+        context.Products.Remove(product);
+
+        try
+        {
+            await context.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            // En AdventureWorks un Product está referenciado por otras tablas
+            // (historial, listas de materiales, inventario...). Si tiene
+            // dependencias, SQL Server rechaza el DELETE por la clave foránea.
+            throw new GraphQLException(
+                $"No se puede eliminar el producto {id} porque tiene registros " +
+                "relacionados (ventas, inventario, etc.).");
+        }
+
+        return new DeleteProductPayload(id, product.Name);
     }
 }
