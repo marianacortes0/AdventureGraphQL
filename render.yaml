@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: adventure-graphql
+    runtime: docker
+    plan: free
+    healthCheckPath: /graphql
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_HTTP_PORTS
+        value: "8080"
+      # --- Secretos: configúralos manualmente en el dashboard de Render ---
+      - key: ConnectionStrings__AdventureWorks
+        sync: false
+      - key: Jwt__Key
+        sync: false
+      - key: DemoUser__Password
+        sync: false
+      # --- Valores no sensibles ---
+      - key: Jwt__Issuer
+        value: AdventureGraphQL
+      - key: Jwt__Audience
+        value: AdventureGraphQL.Front
+      - key: Jwt__ExpiresMinutes
+        value: "60"
+      - key: DemoUser__Username
+        value: admin
+      # URL(s) del frontend separadas por coma, ej: https://mi-front.onrender.com
+      - key: AllowedOrigins
+        value: "http://localhost:3000"

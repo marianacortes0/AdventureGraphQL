@@ -1,0 +1,10 @@
+**/.vs
+**/.vscode
+**/bin
+**/obj
+**/*.user
+.git
+.gitignore
+docs
+planeacion
+README.md

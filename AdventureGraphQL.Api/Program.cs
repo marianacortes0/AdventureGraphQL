@@ -64,10 +64,14 @@ builder.Services
     });
 builder.Services.AddAuthorization();
 
-// 3) CORS: el front (localhost:3000) es un origen distinto al de la API.
+// 3) CORS: orígenes leídos desde AllowedOrigins (separados por coma).
+var allowedOrigins = builder.Configuration["AllowedOrigins"]
+    ?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+    ?? ["http://localhost:3000"];
+
 builder.Services.AddCors(o => o.AddPolicy("front", p => p
-    .WithOrigins("http://localhost:3000")
-    .AllowAnyHeader()    // permite el header Authorization (Escenario D)
+    .WithOrigins(allowedOrigins)
+    .AllowAnyHeader()
     .AllowAnyMethod()));
 
 var app = builder.Build();
