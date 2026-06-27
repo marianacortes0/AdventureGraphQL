@@ -10,6 +10,7 @@ services:
       - key: ASPNETCORE_HTTP_PORTS
         value: "8080"
       # --- Secretos: configúralos manualmente en el dashboard de Render ---
+      # Formato Neon: Host=xxx.neon.tech;Database=neondb;Username=xxx;Password=xxx;SSL Mode=Require
       - key: ConnectionStrings__AdventureWorks
         sync: false
       - key: Jwt__Key

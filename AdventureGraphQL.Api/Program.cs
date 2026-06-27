@@ -12,7 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 //    GraphQL resuelve campos en paralelo y un DbContext NO es seguro
 //    para concurrencia: la factory entrega una instancia limpia por operación.
 builder.Services.AddPooledDbContextFactory<AdventureWorksContext>(opt =>
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("AdventureWorks")));
+    opt.UseNpgsql(builder.Configuration.GetConnectionString("AdventureWorks")));
 
 // 2) Servidor GraphQL + capacidades
 builder.Services
