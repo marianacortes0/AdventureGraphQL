@@ -3,11 +3,11 @@ using AdventureGraphQL.Api.Auth;
 using AdventureGraphQL.Api.Data;
 using AdventureGraphQL.Api.GraphQL;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 // Npgsql 6+: permite guardar DateTime.UtcNow en columnas timestamp (sin timezone)
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
